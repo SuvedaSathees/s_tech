@@ -1,0 +1,35 @@
+<!doctype html><meta charset="utf-8"><title>bridge</title>
+<body style="background:#111;color:#ccc;font:14px sans-serif;padding:12px">Temporary S TEC file bridge (dev only). Safe to close.
+<pre id="log" style="font:12px monospace;color:#8cf"></pre>
+<script>
+// Dev-only helper (temporary): relays files between this local dev server and the Gemini tab that opened it. Delete after use.
+const ORIGIN = 'https://gemini.google.com';
+const log = (t) => { document.getElementById('log').textContent += t + '\n'; };
+window.addEventListener('message', async (e) => {
+  if (e.origin !== ORIGIN) return;
+  const d = e.data || {};
+  try {
+    if (d.get) {
+      const out = [];
+      for (const n of d.get) {
+        if (!/^[\w.-]+$/.test(n)) continue;
+        const r = await fetch('/flow-keys/' + n, { cache: 'no-store' });
+        out.push({ name: n, type: r.headers.get('content-type') || 'image/jpeg', ok: r.ok, buf: await r.arrayBuffer() });
+      }
+      e.source.postMessage({ files: out }, ORIGIN, out.map((o) => o.buf));
+      log('sent ' + out.map((o) => o.name + ':' + o.buf.byteLength).join(' '));
+    }
+    if (d.put) {
+      const r = await fetch('/api/flow-put?name=' + encodeURIComponent(d.put.name), { method: 'POST', body: d.put.buf });
+      const j = await r.json().catch(() => ({}));
+      e.source.postMessage({ putDone: { name: d.put.name, ok: r.ok, bytes: j.bytes || 0 } }, ORIGIN);
+      log('saved ' + d.put.name + ' ' + (j.bytes || 0));
+    }
+  } catch (err) {
+    e.source.postMessage({ bridgeError: String(err) }, ORIGIN);
+    log('error ' + err);
+  }
+});
+if (window.opener) window.opener.postMessage({ bridgeReady: true }, ORIGIN);
+log('ready');
+</script>

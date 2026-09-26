@@ -1,8 +1,10 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { SPACES } from "@/content/spaces";
+import { ArrowUpRight } from "@/components/site/Icons";
 
 /**
  * "Spaces we secure": on large screens the section pins and the cards glide
@@ -21,10 +23,11 @@ export default function Spaces() {
 
     const size = () => {
       if (mq.matches) {
-        const was = track.style.transform;
-        track.style.transform = "none";
-        dist = Math.max(0, track.scrollWidth - window.innerWidth);
-        track.style.transform = was;
+        // travel until the last space reaches the left edge (at the page gutter); the closing panel fills the right
+        const cards = track.querySelectorAll<HTMLElement>(".p-card");
+        const lastCard = cards[cards.length - 1];
+        const gutter = parseFloat(getComputedStyle(track).paddingLeft) || 0;
+        dist = lastCard ? Math.max(0, lastCard.offsetLeft - gutter) : 0;
         sec.style.height = window.innerHeight + dist + "px";
       } else {
         dist = 0;
@@ -109,7 +112,15 @@ export default function Spaces() {
               </div>
             </article>
           ))}
-          <div className="p-end" aria-hidden="true" />
+          <aside className="p-close" aria-label="Other kinds of property">
+            <p className="eyebrow">Something else?</p>
+            <p className="p-close-t">Every property is used differently.</p>
+            <p className="p-close-d">Tell us how yours works — who comes and goes, and what needs watching — and we’ll plan around it.</p>
+            <Link className="tlink" href="/contact#enquiry">
+              Describe your space
+              <ArrowUpRight className="" />
+            </Link>
+          </aside>
         </div>
       </div>
     </section>

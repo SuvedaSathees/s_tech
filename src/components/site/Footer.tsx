@@ -35,6 +35,9 @@ export default function Footer() {
               <ShieldIcon />
               {company.tagline}
             </p>
+            <button className="f-top" type="button" onClick={toTop} aria-label="Back to top">
+              <ArrowUp />
+            </button>
           </div>
 
           <nav aria-label="Footer">

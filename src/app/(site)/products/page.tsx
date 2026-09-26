@@ -12,9 +12,9 @@ import { PRODUCT_FAQS } from "@/content/faqs";
 export const metadata: Metadata = {
   title: "Security Products — Cameras, Door Phones, Locks & Sensors",
   description:
-    "Security cameras and recorders, video door phones, fingerprint and card readers, digital door locks, alarm sensors, home automation controls and gate motors, supplied and installed to work together.",
+    "Security cameras and recorders, video door phones, fingerprint and card readers, digital door locks, alarm sensors, home automation controls, gate motors, boom barriers, intercoms and nurse call systems — supplied and installed to work together.",
   alternates: { canonical: "/products" },
-  openGraph: og("/products", 'Security Products — Cameras, Door Phones, Locks & Sensors', 'Security cameras and recorders, video door phones, fingerprint and card readers, digital door locks, alarm sensors, home automation controls and gate motors, supplied and installed to work together.'),
+  openGraph: og("/products", 'Security Products — Cameras, Door Phones, Locks & Sensors', 'Security cameras and recorders, video door phones, fingerprint and card readers, digital door locks, alarm sensors, home automation controls, gate motors, boom barriers, intercoms and nurse call systems — supplied and installed to work together.'),
 };
 
 export default function ProductsPage() {
@@ -27,7 +27,7 @@ export default function ProductsPage() {
         ]}
         lines={["The hardware", "behind every system."]}
         lede="Cameras, door phones, readers, sensors and controllers — chosen for your space, then installed and set up to work as one."
-        tags={["Cameras", "Door phones", "Readers & locks", "Sensors", "Controllers", "Gate motors"]}
+        tags={["Cameras", "Door phones", "Readers & locks", "Sensors", "Controllers", "Gate motors", "Barriers", "Intercoms", "Nurse call"]}
         id="prod-h"
       />
 
@@ -94,6 +94,11 @@ export default function ProductsPage() {
         lines={["Choosing", "the right kit."]}
         lede="Short answers about cameras, recorders, readers and automation hardware. For anything specific to your space, ask us directly."
         items={PRODUCT_FAQS}
+        help={{
+          kicker: "Second opinion",
+          title: "Already have a model in mind?",
+          text: "Send us the model or a quote you’ve received and we’ll tell you plainly whether it suits your property.",
+        }}
       />
 
       <CtaBand

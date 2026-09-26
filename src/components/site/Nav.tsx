@@ -3,15 +3,28 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { NAV, company, whatsappHref } from "@/content/company";
+import { NAV, company } from "@/content/company";
 import { ArrowUpRight, Mark } from "./Icons";
+import { Btn, QuickActions } from "./ui";
 
 const isCurrent = (path: string, href: string) => (href === "/" ? path === "/" : path === href || path.startsWith(href + "/"));
 
+/** Line icons and a short hint for each page in the phone menu. */
+const PAGE: Record<string, { ic: string; hint: string }> = {
+  "/": { ic: "M3.5 10.5 12 3.5l8.5 7 M5.5 9v11h13V9 M10 20v-5.5h4V20", hint: "Start here" },
+  "/about": { ic: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M4.5 20.5a7.5 7.5 0 0 1 15 0", hint: "Who we are" },
+  "/services": { ic: "M12 3.5 3.5 8l8.5 4.5L20.5 8z M3.5 12.2 12 16.7l8.5-4.5 M3.5 16.4 12 20.9l8.5-4.5", hint: "Five systems" },
+  "/products": { ic: "M3 8.5h12l3-2.2v7.4l-3-2.2H3z M6.5 11.5v6.5 M4.5 18h4", hint: "Hardware & tech" },
+  "/blog": { ic: "M2.5 5.5h6a3.5 3.5 0 0 1 3.5 3.5v11a2.5 2.5 0 0 0-2.5-2.5h-7z M21.5 5.5h-6A3.5 3.5 0 0 0 12 9v11a2.5 2.5 0 0 1 2.5-2.5h7z", hint: "Guides & tips" },
+  "/contact": { ic: "M7.9 20A9 9 0 1 0 4 16.1L2 22Z", hint: "Book a visit" },
+};
+
 /**
- * Header: rolls in on load, labels roll on hover, a lit hairline slides to the
- * link under the pointer and rests on the current page, the bar tucks away while
- * scrolling down and returns on the way up, and a thin line tracks reading progress.
+ * Header. Large screens: a bar that rolls in, labels roll on hover, a lit hairline
+ * slides to the link under the pointer, the bar tucks away while scrolling down and a
+ * thin line tracks reading progress. Phones and tablets: a floating glass pill with a
+ * round menu button that opens a panel of page tiles, quick contact actions and a
+ * consultation button.
  */
 export default function Nav() {
   const path = usePathname() || "/";
@@ -78,10 +91,11 @@ export default function Nav() {
     };
   }, [open, path]);
 
-  // close the sheet on navigation; lock scrolling while it is open
+  // close the menu on navigation; lock scrolling while it is open
   useEffect(() => setOpen(false), [path]);
   useEffect(() => {
     document.documentElement.style.overflow = open ? "hidden" : "";
+    if (open) header.current?.classList.remove("tucked");
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -92,11 +106,15 @@ export default function Nav() {
 
   return (
     <>
-      <header ref={header} className="nav">
+      <header ref={header} className={`nav${open ? " menu-open" : ""}`}>
         <div className="wrap nav-in">
           <Link className="wm" href="/" aria-label={`${company.name} — home`}>
             <Mark size={24} />
             <span className="wm-t">{company.name}</span>
+            <span className="wm-2" aria-hidden="true">
+              <b>S TEC</b>
+              <small>SECURE</small>
+            </span>
           </Link>
 
           <div ref={links} className="nav-links" onMouseLeave={rest}>
@@ -143,48 +161,47 @@ export default function Nav() {
           >
             <span />
             <span />
-            <span />
           </button>
         </div>
         <span ref={prog} className="nav-prog" aria-hidden="true" />
       </header>
 
-      <div id="sheet" className={`sheet${open ? " open" : ""}`} aria-hidden={!open}>
-        <nav className="sheet-nav" aria-label="Mobile">
-          {NAV.map((n, i) => (
-            <Link
-              key={n.href}
-              href={n.href}
-              className="sheet-link"
-              aria-current={isCurrent(path, n.href) ? "page" : undefined}
-              tabIndex={open ? 0 : -1}
-              onClick={() => setOpen(false)}
-              style={{ ["--i" as string]: i }}
-            >
-              <small>0{i + 1}</small>
-              <span className="t">{n.label}</span>
-            </Link>
-          ))}
+      <div className={`sheet-dim${open ? " open" : ""}`} aria-hidden="true" onClick={() => setOpen(false)} />
+      <div id="sheet" className={`sheet${open ? " open" : ""}`} aria-hidden={!open} aria-label="Menu">
+        <nav className="m-grid" aria-label="Mobile">
+          {NAV.map((n, i) => {
+            const pg = PAGE[n.href];
+            return (
+              <Link
+                key={n.href}
+                href={n.href}
+                className="m-tile"
+                aria-current={isCurrent(path, n.href) ? "page" : undefined}
+                onClick={() => setOpen(false)}
+                style={{ ["--i" as string]: i }}
+              >
+                <span className="m-ic" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d={pg.ic} />
+                  </svg>
+                </span>
+                <ArrowUpRight className="m-arr" />
+                <span className="m-txt">
+                  <span className="m-l">{n.label}</span>
+                  <span className="m-s">{pg.hint}</span>
+                </span>
+              </Link>
+            );
+          })}
         </nav>
-        <div className="sheet-foot">
-          <a href={company.phoneHref} tabIndex={open ? 0 : -1}>
-            {company.phone}
-          </a>
-          <a href={`mailto:${company.email}`} tabIndex={open ? 0 : -1}>
-            {company.email}
-          </a>
-          <div className="row">
-            <a href={whatsappHref()} target="_blank" rel="noopener noreferrer" tabIndex={open ? 0 : -1}>
-              WhatsApp
-            </a>
-            <a href={company.social.instagram} target="_blank" rel="noopener noreferrer" tabIndex={open ? 0 : -1}>
-              Instagram
-            </a>
-            <a href={company.social.facebook} target="_blank" rel="noopener noreferrer" tabIndex={open ? 0 : -1}>
-              Facebook
-            </a>
-          </div>
-        </div>
+        <QuickActions className="m-qa" />
+        <Btn href="/contact#enquiry" solid className="m-cta">
+          Book a consultation
+        </Btn>
+        <p className="m-foot">
+          <span className="live" aria-hidden="true" />
+          {company.tagline}
+        </p>
       </div>
     </>
   );

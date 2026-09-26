@@ -7,16 +7,17 @@ import { Btn, WhatsAppBtn } from "@/components/site/ui";
  * The film hero.
  * Larger screens: the film is scrubbed by scroll across a 700vh pinned stage, with
  *   captions, status chips, a scene rail and a scroll cue on the right edge.
- * Phones (and phones held sideways): a looping vertical film plays on its own under
- *   the wordmark. Portrait tablets scrub the vertical cut.
+ * Phones (and phones held sideways): the vertical film plays once at the top of the
+ *   page and stops on its last scene (a replay button appears); the wordmark, line
+ *   and buttons sit underneath it. Portrait tablets scrub the vertical cut.
  * Films: /media/film/wide|tall|phone.(mp4|webm). Caption windows are fractions of the film.
  */
 const CHAPTERS = [
-  { no: "01", label: "Gate Automation", a: "You arrive.", b: "The gate opens.", chip: ["Main gate", "Opening"], w: "0.045,0.075,0.115,0.14" },
-  { no: "02", label: "Access Control", a: "One touch.", b: "The door opens itself.", chip: ["Fingerprint", "Verified · Unlocked"], w: "0.17,0.2,0.32,0.345" },
-  { no: "03", label: "Smart Curtains", a: "Dusk falls.", b: "The curtains draw.", chip: ["Curtains", "Closing"], w: "0.375,0.4,0.47,0.495" },
-  { no: "04", label: "Lights & Fan", a: "Lights rise, the fan turns —", b: "not a switch touched.", chip: ["Living room", "Evening scene"], w: "0.525,0.55,0.625,0.65" },
-  { no: "05", label: "CCTV & Alarm", a: "Watched 24/7,", b: "even while you sleep.", chip: ["REC · CAM 01", "Armed"], w: "0.675,0.7,0.765,0.785" },
+  { no: "01", label: "Gate Automation", a: "The gate opens", b: "as you arrive.", chip: ["Main gate", "Opening"], w: "0.045,0.075,0.115,0.14" },
+  { no: "02", label: "Access Control", a: "Face or finger.", b: "The door unlocks.", chip: ["Fingerprint", "Verified · Unlocked"], w: "0.17,0.2,0.32,0.345" },
+  { no: "03", label: "Smart Curtains", a: "Curtains close", b: "on their own.", chip: ["Curtains", "Closing"], w: "0.375,0.4,0.47,0.495" },
+  { no: "04", label: "Lights & Fan", a: "Lights on. Fan on.", b: "No switch touched.", chip: ["Living room", "Evening scene"], w: "0.525,0.55,0.625,0.65" },
+  { no: "05", label: "CCTV & Alarm", a: "Watched 24/7,", b: "even while you rest.", chip: ["REC · CAM 01", "Armed"], w: "0.675,0.7,0.765,0.785" },
 ] as const;
 const SCENES: [number, string][] = [
   [0, "Gate"],
@@ -26,6 +27,16 @@ const SCENES: [number, string][] = [
   [0.66, "CCTV"],
   [0.795, "S TEC Secure"],
 ];
+/** Scene starts in the phone cut (seconds). */
+const PHONE = [
+  { t: 0, no: "01", label: "Gate Automation" },
+  { t: 3.9, no: "02", label: "Access Control" },
+  { t: 9.8, no: "03", label: "Lights & Fan" },
+  { t: 18.6, no: "04", label: "CCTV & Alarm" },
+  { t: 22.5, no: "05", label: "S TEC Secure" },
+];
+/** The phone cut was made to loop: its last 0.8 s dissolve back to the first frame. It stops just before that. */
+const TAIL = 0.9;
 const WORD = "S TEC SECURE".split("");
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
@@ -38,12 +49,15 @@ const win4 = (p: number, [a, b, c, d]: number[]) => Math.min(ramp(p, a, b), 1 - 
 export default function HeroFilm() {
   const heroRef = useRef<HTMLElement>(null);
   const vRef = useRef<HTMLVideoElement>(null);
+  const replayRef = useRef<() => void>(() => {});
 
   useEffect(() => {
     const hero = heroRef.current!, v = vRef.current!;
     const $ = <T extends HTMLElement>(s: string) => hero.querySelector<T>(s)!;
     const poster = $("#poster"), loader = $("#loader"), loadBar = $("#loadBar"), loadTxt = $("#loadTxt");
     const sceneN = $("#sceneN"), sceneL = $("#sceneL"), barI = $("#barI"), cueFill = $("#cueFill"), cueN = $("#cueN"), clock = $("#clock");
+    const chipNo = $("#mChipNo"), chipL = $("#mChipL");
+    const segs = Array.from(hero.querySelectorAll<HTMLElement>(".m-segs b"));
     const wins = Array.from(hero.querySelectorAll<HTMLElement>("[data-w]")).map((el) => ({
       el,
       w: el.dataset.w!.split(",").map(Number),
@@ -58,14 +72,19 @@ export default function HeroFilm() {
     const webmok = !!v.canPlayType('video/webm; codecs="vp9"');
     const order = mp4ok || !webmok ? ["mp4", "webm"] : ["webm", "mp4"];
     let mode = "", base = "", dur = 0, attempt = 0, blobUrl = "", heroVisible = true, lastSeek = -1, alive = true;
+    let done = false, started = false, lastPhone = -1;
     let fetchCtl: AbortController | null = null;
 
+    const setState = (s: "idle" | "playing" | "done") => {
+      hero.classList.toggle("film-done", s === "done");
+      hero.classList.toggle("film-idle", s === "idle");
+    };
     const filmFail = () => {
       loadTxt.textContent = "Film unavailable · scroll to read";
       setTimeout(() => loader.classList.add("done"), 2500);
     };
     const playIfAllowed = () => {
-      if (mode !== "play" || !heroVisible || reduce || v.ended) return;
+      if (mode !== "play" || !heroVisible || done || (reduce && !started) || v.ended) return;
       const pr = v.play();
       if (pr && pr.catch) pr.catch(() => {});
     };
@@ -84,6 +103,8 @@ export default function HeroFilm() {
       attempt = 0;
       dur = 0;
       lastSeek = -1;
+      done = false;
+      lastPhone = -1;
       if (fetchCtl) {
         fetchCtl.abort();
         fetchCtl = null;
@@ -95,14 +116,16 @@ export default function HeroFilm() {
       poster.classList.remove("gone");
       if (mode === "play") {
         loader.classList.add("done");
-        v.loop = true;
+        v.loop = false; // plays once and holds its last scene
         v.muted = true;
         v.defaultMuted = true;
         v.setAttribute("muted", "");
         v.autoplay = !reduce;
+        setState(reduce ? "idle" : "playing");
         tryDirect();
         return;
       }
+      setState("playing");
       v.loop = false;
       v.autoplay = false;
       v.pause();
@@ -119,8 +142,8 @@ export default function HeroFilm() {
           const chunks: BlobPart[] = [];
           let got = 0;
           for (;;) {
-            const { done, value } = await reader.read();
-            if (done) break;
+            const { done: end, value } = await reader.read();
+            if (end) break;
             chunks.push(value);
             got += value.length;
             const pct = Math.min(100, Math.round((got / total) * 100));
@@ -142,6 +165,25 @@ export default function HeroFilm() {
       })();
     };
 
+    // phones: stop on the last scene, and let the viewer play it again
+    const finish = () => {
+      if (done) return;
+      done = true;
+      v.pause();
+      if (dur) v.currentTime = Math.max(0, dur - TAIL);
+      setState("done");
+    };
+    replayRef.current = () => {
+      if (mode !== "play") return;
+      started = true;
+      done = false;
+      lastPhone = -1;
+      setState("playing");
+      v.currentTime = 0;
+      const pr = v.play();
+      if (pr && pr.catch) pr.catch(() => {});
+    };
+
     const onMeta = () => (dur = v.duration || 0);
     const onData = () => {
       loader.classList.add("done");
@@ -150,10 +192,12 @@ export default function HeroFilm() {
     const onErr = () => {
       if (v.getAttribute("src")) tryDirect();
     };
+    const onEnded = () => mode === "play" && finish();
     v.addEventListener("loadedmetadata", onMeta);
     v.addEventListener("loadeddata", onData);
     v.addEventListener("canplay", playIfAllowed);
     v.addEventListener("error", onErr);
+    v.addEventListener("ended", onEnded);
     const onMq = () => setupFilm();
     mqPhone.addEventListener("change", onMq);
     mqPortrait.addEventListener("change", onMq);
@@ -175,7 +219,7 @@ export default function HeroFilm() {
     let primed = false;
     const unlock = () => {
       if (mode === "play") {
-        if (v.paused && !v.ended) playIfAllowed();
+        if (v.paused && !done && !reduce) playIfAllowed();
         return;
       }
       if (!primed) {
@@ -193,11 +237,39 @@ export default function HeroFilm() {
     tickClock();
     const clockTimer = window.setInterval(tickClock, 1000);
 
-    // one loop drives the film time, captions, rail and cue
+    // phones: scene chip, progress segments and the stop before the loop dissolve
+    const phoneTick = () => {
+      if (mode !== "play" || !dur) return;
+      const stopAt = dur - TAIL;
+      if (!done && v.currentTime >= stopAt) finish();
+      const t = done ? stopAt : v.currentTime;
+      let i = 0;
+      PHONE.forEach((s, k) => {
+        if (t >= s.t) i = k;
+      });
+      if (i !== lastPhone) {
+        lastPhone = i;
+        chipNo.textContent = PHONE[i].no;
+        chipL.textContent = PHONE[i].label;
+      }
+      segs.forEach((el, k) => {
+        const a = PHONE[k].t, b = k < PHONE.length - 1 ? PHONE[k + 1].t : stopAt;
+        el.style.transform = `scaleX(${clamp01((t - a) / (b - a)).toFixed(3)})`;
+      });
+    };
+    // media events keep this going even when animation frames are throttled
+    v.addEventListener("timeupdate", phoneTick);
+
+    // one loop drives the film time, captions, rail and cue (and the phone scene chip)
     let cur = 0, lastIdx = -1, last = performance.now(), snap = true, raf = 0;
     const frame = (now: number) => {
       const dt = Math.min(Math.max(now - last, 0) / 1000, 0.1);
       last = now;
+      if (mode === "play") {
+        phoneTick();
+        raf = requestAnimationFrame(frame);
+        return;
+      }
       const k = reduce ? 1 : 1 - Math.pow(0.0008, dt);
       const r = hero.getBoundingClientRect();
       const target = clamp01(-r.top / Math.max(1, hero.offsetHeight - window.innerHeight));
@@ -253,6 +325,8 @@ export default function HeroFilm() {
       v.removeEventListener("loadeddata", onData);
       v.removeEventListener("canplay", playIfAllowed);
       v.removeEventListener("error", onErr);
+      v.removeEventListener("ended", onEnded);
+      v.removeEventListener("timeupdate", phoneTick);
       if (fetchCtl) fetchCtl.abort();
       v.pause();
       v.removeAttribute("src");
@@ -286,26 +360,26 @@ export default function HeroFilm() {
         </div>
 
         <div className="hud-t">
-          {/* opening frame: the wordmark along the bottom */}
+          {/* opening frame: the brand along the bottom */}
           <div className="brand" data-w="-1,0,0.03,0.055" data-y="34" style={{ opacity: 1, visibility: "visible" }}>
-            <div className="brand-top">
-              <p className="brand-kicker">
-                <span className="live" aria-hidden="true" />
-                Security &amp; Automation Solutions
+            <p className="brand-kicker">
+              <span className="live" aria-hidden="true" />
+              Security &amp; Automation Solutions
+            </p>
+            <div className="brand-rule" aria-hidden="true" />
+            <div className="brand-row">
+              <p className="brand-word" aria-label="S TEC SECURE">
+                {WORD.map((ch, i) => (
+                  <span key={i} className={ch === " " ? "sp" : undefined} style={{ ["--i" as string]: i }} aria-hidden="true">
+                    {ch === " " ? " " : ch}
+                  </span>
+                ))}
               </p>
               <p className="brand-tag">
                 Security that <em>thinks.</em>
                 <i className="caret" aria-hidden="true" />
               </p>
             </div>
-            <div className="brand-rule" aria-hidden="true" />
-            <p className="brand-word" aria-label="S TEC SECURE">
-              {WORD.map((ch, i) => (
-                <span key={i} className={ch === " " ? "sp" : undefined} style={{ ["--i" as string]: i }} aria-hidden="true">
-                  {ch === " " ? " " : ch}
-                </span>
-              ))}
-            </p>
           </div>
 
           {CHAPTERS.map((c) => (
@@ -324,15 +398,13 @@ export default function HeroFilm() {
           <div className="cap" id="final" data-w="0.82,0.87,2,2" data-y="30" data-interactive="1">
             <p className="eyebrow">S TEC SECURE</p>
             <h2 className="display">
-              <span className="l">A home that</span>
-              <span className="l w55">looks after itself.</span>
+              <span className="l">One app.</span>
+              <span className="l w55">Your whole home.</span>
             </h2>
-            <p className="sub">
-              Gate, doors, lights, fans, curtains, cameras and alarms — designed, installed and supported by S Tec Secure, and all in one app.
-            </p>
+            <p className="sub">Gate automation, access control, home automation, CCTV and alarms — installed and supported by S Tec Secure.</p>
             <div className="btn-row">
               <WhatsAppBtn solid />
-              <Btn href="/services">Explore services</Btn>
+              <Btn href="/services">Our services</Btn>
             </div>
           </div>
         </div>
@@ -360,32 +432,49 @@ export default function HeroFilm() {
           </span>
         </div>
 
-        {/* phones: the film plays under the wordmark */}
-        <div className="hero-phone">
-          <p className="brand-kicker">
-            <span className="live" aria-hidden="true" />
-            Security &amp; Automation
-          </p>
-          <p className="brand-tag">
-            Security that <em>thinks.</em>
-            <i className="caret" aria-hidden="true" />
-          </p>
-          <p className="brand-word" aria-hidden="true">
-            {WORD.map((ch, i) => (
-              <span key={i} className={ch === " " ? "sp" : undefined} style={{ ["--i" as string]: i }}>
-                {ch === " " ? " " : ch}
-              </span>
-            ))}
-          </p>
-          <div className="brand-rule" aria-hidden="true" />
-          <p className="pcue" aria-hidden="true">
-            <span>Scroll</span>
-            <i />
-          </p>
-        </div>
+        {/* phones: which scene is playing, then a replay button once the film has finished */}
+        <p className="m-chip" aria-hidden="true">
+          <span className="live" />
+          <span className="n" id="mChipNo">
+            01
+          </span>
+          <span id="mChipL">Gate Automation</span>
+        </p>
+        <button className="m-replay" type="button" onClick={() => replayRef.current()}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M3 12a9 9 0 1 0 3-6.7" />
+            <path d="M3 4v5h5" />
+          </svg>
+          <span className="rp">Replay film</span>
+          <span className="pl">Play film</span>
+        </button>
 
         <div className="grain" aria-hidden="true" />
         <div className="fade" aria-hidden="true" />
+      </div>
+
+      {/* phones: the brand, line and buttons sit under the film */}
+      <div className="hero-m">
+        <div className="m-segs" aria-hidden="true">
+          {PHONE.map((s) => (
+            <i key={s.no}>
+              <b />
+            </i>
+          ))}
+        </div>
+        <p className="brand-kicker">
+          <span className="live" aria-hidden="true" />
+          Security &amp; Automation Solutions
+        </p>
+        <p className="m-word">S TEC SECURE</p>
+        <p className="m-tag">
+          Security that <em>thinks.</em>
+        </p>
+        <p className="m-sub">Gate automation, access control, home automation, CCTV and alarms — installed and supported by S Tec Secure.</p>
+        <div className="m-btns">
+          <WhatsAppBtn solid />
+          <Btn href="/services">Our services</Btn>
+        </div>
       </div>
     </section>
   );

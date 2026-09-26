@@ -42,4 +42,25 @@ export const PRODUCTS = [
     items: ["Sliding gate motors", "Swing gate motors", "Remote controls", "Door phone integration"],
     sys: "Gate Automation",
   },
+  {
+    id: "barrier",
+    title: "Boom Barriers",
+    line: "Automatic barrier arms that control vehicle entry at parking areas, gated communities and commercial complexes.",
+    items: ["Automatic barrier arms", "Remote or card operation", "Parking entry & exit", "Gated communities & complexes"],
+    sys: "Boom Barriers",
+  },
+  {
+    id: "intercom",
+    title: "Intercom Systems",
+    line: "Internal phone lines that connect rooms, floors and buildings — from reception to every cabin.",
+    items: ["Desk & wall stations", "Room-to-room calling", "Reception & cabin lines", "Offices, schools & homes"],
+    sys: "Intercom Systems",
+  },
+  {
+    id: "nursecall",
+    title: "Nurse Calling Systems",
+    line: "Bedside call points that alert nursing staff straight away in hospitals, clinics and care facilities.",
+    items: ["Bedside call buttons", "Corridor indicator lights", "Nurse station display", "Hospitals, clinics & care homes"],
+    sys: "Nurse Calling Systems",
+  },
 ] as const;

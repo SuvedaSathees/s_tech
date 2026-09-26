@@ -1,22 +1,24 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { ArrowUpRight, ChatIcon } from "./Icons";
-import { absolute, whatsappHref } from "@/content/company";
+import { ArrowUpRight, ChatIcon, MailIcon, PhoneIcon, WhatsAppIcon } from "./Icons";
+import FaqList from "./FaqList";
+import { absolute, company, whatsappHref } from "@/content/company";
 import type { Faq } from "@/content/faqs";
 
 /* ---------- buttons ---------- */
-type BtnProps = { href: string; children: ReactNode; solid?: boolean; icon?: "arrow" | "chat"; className?: string };
+type BtnProps = { href: string; children: ReactNode; solid?: boolean; icon?: "arrow" | "chat" | "phone"; className?: string };
 export function Btn({ href, children, solid, icon = "arrow", className = "" }: BtnProps) {
-  const external = /^https?:/.test(href);
+  const web = /^https?:/.test(href);
+  const plain = web || /^(tel|mailto):/.test(href);
   const cls = `btn mag${solid ? " solid" : ""}${className ? ` ${className}` : ""}`;
   const inner = (
     <span className="in">
       {children}
-      {icon === "chat" ? <ChatIcon /> : <ArrowUpRight />}
+      {icon === "chat" ? <ChatIcon /> : icon === "phone" ? <PhoneIcon /> : <ArrowUpRight />}
     </span>
   );
-  return external ? (
-    <a className={cls} href={href} target="_blank" rel="noopener noreferrer">
+  return plain ? (
+    <a className={cls} href={href} {...(web ? { target: "_blank", rel: "noopener noreferrer" } : {})}>
       {inner}
     </a>
   ) : (
@@ -26,9 +28,9 @@ export function Btn({ href, children, solid, icon = "arrow", className = "" }: B
   );
 }
 
-export function WhatsAppBtn({ label = "WhatsApp us", solid }: { label?: string; solid?: boolean }) {
+export function WhatsAppBtn({ label = "WhatsApp us", solid, className }: { label?: string; solid?: boolean; className?: string }) {
   return (
-    <Btn href={whatsappHref()} icon="chat" solid={solid}>
+    <Btn href={whatsappHref()} icon="chat" solid={solid} className={className}>
       {label}
     </Btn>
   );
@@ -40,6 +42,41 @@ export function TLink({ href, children }: { href: string; children: ReactNode })
       {children}
       <ArrowUpRight className="" />
     </Link>
+  );
+}
+
+/** Call / WhatsApp / Email as three round-icon tiles (phones, menu and contact page). */
+export function QuickActions({ className = "", values = false }: { className?: string; values?: boolean }) {
+  return (
+    <ul className={`qa${className ? ` ${className}` : ""}`} aria-label="Contact S Tec Secure">
+      <li>
+        <a href={company.phoneHref}>
+          <span className="qa-ic">
+            <PhoneIcon />
+          </span>
+          <span className="qa-l">Call</span>
+          {values && <span className="qa-v">{company.phone}</span>}
+        </a>
+      </li>
+      <li>
+        <a href={whatsappHref()} target="_blank" rel="noopener noreferrer">
+          <span className="qa-ic">
+            <WhatsAppIcon />
+          </span>
+          <span className="qa-l">WhatsApp</span>
+          {values && <span className="qa-v">Chat with us</span>}
+        </a>
+      </li>
+      <li>
+        <a href={`mailto:${company.email}`}>
+          <span className="qa-ic">
+            <MailIcon />
+          </span>
+          <span className="qa-l">Email</span>
+          {values && <span className="qa-v">{company.email}</span>}
+        </a>
+      </li>
+    </ul>
   );
 }
 
@@ -55,6 +92,16 @@ export function Lines({ as = "h2", lines, dim = [lines.length - 1], id, classNam
         </span>
       ))}
     </Tag>
+  );
+}
+
+/** Section label with an optional running number: "01 — Vision & mission". */
+export function Eyebrow({ n, children, className = "" }: { n?: string; children: ReactNode; className?: string }) {
+  return (
+    <p className={`eyebrow${className ? ` ${className}` : ""}`}>
+      {n && <span className="pn">{n}</span>}
+      {children}
+    </p>
   );
 }
 
@@ -131,48 +178,47 @@ export function CtaBand({ kicker, lines, lede, label = "Book a consultation" }: 
             <Btn href="/contact#enquiry" solid>
               {label}
             </Btn>
-            <WhatsAppBtn />
+            <WhatsAppBtn className="cta-wa" />
           </div>
+          <QuickActions className="cta-acts" />
         </div>
       </div>
     </section>
   );
 }
 
-/* ---------- FAQ with FAQPage schema ---------- */
-type FaqProps = { id: string; kicker: string; lines: [ReactNode, ReactNode]; lede: string; items: Faq[]; alt?: boolean };
-export function FaqSection({ id, kicker, lines, lede, items, alt }: FaqProps) {
+/* ---------- FAQ: question cards, a help panel, and FAQPage schema ---------- */
+type FaqHelp = { kicker: string; title: string; text: string };
+type FaqProps = { id: string; kicker: string; lines: [ReactNode, ReactNode]; lede: string; items: Faq[]; help: FaqHelp; alt?: boolean };
+export function FaqSection({ id, kicker, lines, lede, items, help, alt }: FaqProps) {
   return (
-    <section className={`sec${alt ? " alt" : ""}`} id={id} aria-labelledby={`${id}-h`}>
-      <div className="wrap faq-grid">
-        <div className="faq-side">
-          <p className="eyebrow">{kicker}</p>
-          <Lines lines={lines} id={`${id}-h`} />
+    <section className={`sec faq${alt ? " alt" : ""}`} id={id} aria-labelledby={`${id}-h`}>
+      <div className="wrap">
+        <div className="sec-top">
+          <div>
+            <p className="eyebrow">{kicker}</p>
+            <Lines lines={lines} id={`${id}-h`} />
+          </div>
           <p className="lede" data-reveal="">
             {lede}
           </p>
         </div>
-        <div className="faq-list" data-reveal="">
-          {items.map((f, i) => (
-            <details className="faq-item" key={f.q} open={i === 0}>
-              <summary>
-                <span className="q-no">{String(i + 1).padStart(2, "0")}</span>
-                <span className="q-t">{f.q}</span>
-                <span className="q-i" aria-hidden="true" />
-              </summary>
-              <div className="faq-a">
-                <p>
-                  {f.a}
-                  {f.link && (
-                    <>
-                      {" "}
-                      <Link href={f.link.href}>{f.link.label}</Link>
-                    </>
-                  )}
-                </p>
-              </div>
-            </details>
-          ))}
+        <div className="faq-body">
+          <FaqList items={items} id={id} />
+          <aside className="faq-help" data-reveal="" aria-label={help.kicker}>
+            <span className="faq-help-ic" aria-hidden="true">
+              <ChatIcon />
+            </span>
+            <p className="eyebrow">{help.kicker}</p>
+            <p className="faq-help-t">{help.title}</p>
+            <p className="faq-help-d">{help.text}</p>
+            <div className="faq-help-btns">
+              <WhatsAppBtn solid label="Ask on WhatsApp" />
+              <Btn href={company.phoneHref} icon="phone">
+                {`Call ${company.phone}`}
+              </Btn>
+            </div>
+          </aside>
         </div>
       </div>
       <JsonLd

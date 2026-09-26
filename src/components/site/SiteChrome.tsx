@@ -19,7 +19,18 @@ const ORG = {
   telephone: "+91-96002-52605",
   email: company.email,
   sameAs: [company.social.instagram, company.social.facebook],
-  knowsAbout: ["CCTV surveillance", "Access control", "Video door phones", "Burglar alarms", "Home automation", "Gate automation"],
+  knowsAbout: ["CCTV surveillance", "Access control", "Video door phones", "Burglar alarms", "Home automation", "Gate automation", "Boom barriers", "Intercom systems", "Nurse calling systems"],
+  foundingDate: company.established,
+  areaServed: company.area,
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: company.address.street,
+    addressLocality: company.address.city,
+    addressRegion: company.address.region,
+    postalCode: company.address.postcode,
+    addressCountry: company.address.country,
+  },
+  employee: { "@type": "Person", name: "Santhosh", jobTitle: "CEO" },
 };
 const SITE = { "@context": "https://schema.org", "@type": "WebSite", name: company.name, url: company.url, publisher: { "@id": `${company.url}/#org` } };
 

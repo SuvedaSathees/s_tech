@@ -22,7 +22,7 @@ const WHY = [
 ];
 
 const EXPLORE = [
-  { no: "02", href: "/about", h: "About", p: "Our approach, why we integrate everything, and how a project runs from the first conversation to handover.", cta: "Get to know us" },
+  { no: "02", href: "/about", h: "About", p: "Our approach, why we integrate everything, and how a project runs from the first conversation to handover.", cta: "Meet the team" },
   { no: "03", href: "/services", h: "Services", p: "What each of our five systems does, and the kinds of property we design them for.", cta: "See services" },
   { no: "04", href: "/products", h: "Products", p: "The cameras, readers, sensors and controllers we install — and what they can do together.", cta: "Browse products" },
   { no: "05", href: "/blog", h: "Blog", p: "Plain-language answers to the questions people ask before they buy.", cta: "Read the guides" },

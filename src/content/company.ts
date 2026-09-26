@@ -1,7 +1,7 @@
 /**
- * Company facts for the six-page site. Only verified details live here:
- * phone, WhatsApp, email and social profiles (from stecsecure.com).
- * No address, opening hours, years, client names or numbers are invented.
+ * Company facts for the six-page site. Only details published on the company's
+ * own site (stecsecure.com) live here: phone, WhatsApp, email, social profiles,
+ * the year it was established, the office address, working hours and the CEO's message.
  */
 export const company = {
   name: "S TEC SECURE",
@@ -17,7 +17,27 @@ export const company = {
     instagram: "https://www.instagram.com/stecsecure/",
     facebook: "https://www.facebook.com/61585098598089/",
   },
+  established: "2021",
+  area: "Erode and nearby regions",
+  address: {
+    street: "VSM Complex, 70/12, 16th Main Road, V. Chathram",
+    city: "Erode",
+    region: "Tamil Nadu",
+    postcode: "638004",
+    country: "IN",
+  },
+  hours: "8:00 am – 8:00 pm",
+  ceo: {
+    name: "Mr. Santhosh",
+    title: "CEO, S Tec Secure",
+    photo: "/media/about/ceo.jpg",
+    quote:
+      "At S-Tec Secure, we are dedicated to safeguarding your world with advanced, reliable security solutions. Join us in building a safer future with protection you can count on.",
+  },
 } as const;
+
+export const addressLine = `${company.address.street}, ${company.address.city} – ${company.address.postcode}`;
+export const mapsHref = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${company.address.street}, ${company.address.city} ${company.address.postcode}`)}`;
 
 export const whatsappHref = (text = "Hello S Tec Secure, I'd like to discuss securing my space.") =>
   `https://wa.me/${company.whatsapp}?text=${encodeURIComponent(text)}`;

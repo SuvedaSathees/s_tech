@@ -87,7 +87,7 @@ const stamp = (d: Date) => [d.getHours(), d.getMinutes(), d.getSeconds()].map((n
 
 type LogLine = { id: number; t: string; sys: string; msg: string; kind?: string };
 
-export default function EcosystemMap() {
+export default function EcosystemMap({ num }: { num?: string }) {
   const [hover, setHover] = useState<Id | null>(null);
   const [scn, setScn] = useState(0);
   const [hot, setHot] = useState<string[]>([]);
@@ -247,7 +247,10 @@ export default function EcosystemMap() {
     <section className="eco" id="ecosystem" aria-labelledby="eco-h">
       <div className="wrap eco-grid">
         <div className="eco-copy">
-          <p className="eyebrow">Security ecosystem</p>
+          <p className="eyebrow">
+            {num && <span className="pn">{num}</span>}
+            Security ecosystem
+          </p>
           <h2 className="display" id="eco-h" data-lines="">
             <span className="l">
               <span style={{ ["--i" as string]: 0 }}>Not five products.</span>

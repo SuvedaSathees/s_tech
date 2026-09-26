@@ -118,13 +118,40 @@ export default function EnquiryForm() {
         </label>
       </fieldset>
 
+      {/* phones: two short menus take the place of the option chips, so the whole form fits on one screen */}
+      <div className="enq-m">
+        <label className="sel">
+          <span>Your space</span>
+          <select name="space-m" value={space} onChange={(e) => setSpace(e.target.value)}>
+            {SPACES.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="sel">
+          <span>What you need</span>
+          <select name="system-m" value={systems[0] ?? ""} onChange={(e) => setSystems(e.target.value ? [e.target.value] : [])}>
+            <option value="">Choose…</option>
+            {SYSTEMS.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
       <div className="submit-row">
         <button className="submit" type="submit" disabled={state === "sending"}>
           {state === "sending" ? "Sending…" : "Send enquiry"}
           <ArrowUpRight className="" />
         </button>
         <a className="submit wa" href={waLink} target="_blank" rel="noopener noreferrer">
-          Send on WhatsApp
+          <span>
+            <span className="sub-l">Send on </span>WhatsApp
+          </span>
           <ChatIcon />
         </a>
       </div>

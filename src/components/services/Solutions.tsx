@@ -128,6 +128,22 @@ export default function Solutions() {
               ))}
             </ol>
 
+            {/* phones: the systems sit in a two-column grid, and the chosen one is described here */}
+            <div className="sol-detail" aria-live="polite">
+              <p className="sd-k">
+                <span>{s.no}</span>
+                {s.title}
+              </p>
+              <p className="sd-t" key={s.id}>
+                {s.line}
+              </p>
+              <p className="sd-pts">
+                {s.points.map((pt) => (
+                  <em key={pt}>{pt}</em>
+                ))}
+              </p>
+            </div>
+
             <div className="stage" id="sol-stage" role="tabpanel" aria-label={s.title}>
               {SERVICES.map((x, i) => (
                 <div key={x.id} className={`shot${i === active ? " on" : ""}`} aria-hidden={i !== active}>

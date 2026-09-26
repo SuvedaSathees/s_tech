@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import PostCard from "@/components/blog/PostCard";
@@ -32,7 +33,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: p.lede,
       url: `/blog/${p.slug}`,
       publishedTime: PUBLISHED,
-      images: [OG_IMAGE],
+      images: [{ url: p.img, alt: p.alt }, OG_IMAGE],
     },
   };
 }
@@ -99,6 +100,10 @@ export default async function PostPage({ params }: Props) {
           <p className="post-lede">{p.lede}</p>
         </header>
 
+        <figure className="post-cover">
+          <Image src={p.img} alt={p.alt} fill priority sizes="(min-width: 1280px) 1200px, 100vw" />
+        </figure>
+
         <div className="post-layout">
           <div className="post-body" dangerouslySetInnerHTML={{ __html: html }} />
           <aside className="post-side" aria-label="About this guide">
@@ -135,6 +140,7 @@ export default async function PostPage({ params }: Props) {
           articleSection: p.cat,
           datePublished: PUBLISHED,
           mainEntityOfPage: absolute(`/blog/${p.slug}`),
+          image: absolute(p.img),
           author: { "@type": "Organization", name: company.shortName, url: company.url },
           publisher: { "@type": "Organization", name: company.shortName, url: company.url },
         }}

@@ -10,6 +10,9 @@ export default function Footer() {
   const path = usePathname() || "/";
   const toTop = () => window.scrollTo({ top: 0, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
 
+  // the contact page is a single screen: the form and the details are the whole page
+  if (path === "/contact") return null;
+
   return (
     <footer className="foot">
       <div className="wrap">
@@ -38,6 +41,28 @@ export default function Footer() {
             <button className="f-top" type="button" onClick={toTop} aria-label="Back to top">
               <ArrowUp />
             </button>
+            {/* phones: one line, two pills and the hours */}
+            <div className="f-m">
+              <p className="f-m-desc">Smart security and automation for homes, offices and commercial spaces.</p>
+              <div className="f-m-acts">
+                <a className="f-pill" href={company.phoneHref}>
+                  <span className="ci">
+                    <PhoneIcon />
+                  </span>
+                  {company.phone}
+                </a>
+                <a className="f-pill" href={`mailto:${company.email}`}>
+                  <span className="ci">
+                    <MailIcon />
+                  </span>
+                  Email us
+                </a>
+              </div>
+              <p className="f-m-hours">
+                <i aria-hidden="true" />
+                Working hours · {company.hours}
+              </p>
+            </div>
           </div>
 
           <nav aria-label="Footer">
@@ -99,8 +124,19 @@ export default function Footer() {
 
         <div className="f-base">
           <span>
-            © {new Date().getFullYear()} {company.shortName}. All rights reserved.
+            © {new Date().getFullYear()} {company.shortName}.<span className="f-rights"> All rights reserved.</span>
           </span>
+          <div className="f-soc-m">
+            <a href={company.social.instagram} target="_blank" rel="noopener noreferrer" aria-label="S Tec Secure on Instagram">
+              <InstagramIcon />
+            </a>
+            <a href={company.social.facebook} target="_blank" rel="noopener noreferrer" aria-label="S Tec Secure on Facebook">
+              <FacebookIcon />
+            </a>
+            <a href={whatsappHref()} target="_blank" rel="noopener noreferrer" aria-label="Message S Tec Secure on WhatsApp">
+              <WhatsAppIcon />
+            </a>
+          </div>
           <div className="links">
             <Link href="/contact#enquiry">
               Book a consultation

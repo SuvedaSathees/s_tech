@@ -32,7 +32,7 @@ export default function ContactPage() {
             <address className="c-addr">{addressLine}</address>
             <p className="c-hours">Working hours · {company.hours}</p>
             <a className="tlink" href={mapsHref} target="_blank" rel="noopener noreferrer">
-              Get directions
+              <span className="gd-t">Get directions</span>
               <ArrowUpRight className="" />
             </a>
           </div>

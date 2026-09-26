@@ -379,7 +379,7 @@ export default function HeroFilm() {
           </p>
           <div className="brand-rule" aria-hidden="true" />
           <p className="pcue" aria-hidden="true">
-            Scroll
+            <span>Scroll</span>
             <i />
           </p>
         </div>

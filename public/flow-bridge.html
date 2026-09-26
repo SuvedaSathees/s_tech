@@ -1,11 +1,2 @@
-<!doctype html><meta charset="utf-8"><title>bridge</title><body style="background:#111;color:#ccc;font:14px sans-serif">sending…
-<script>
-(async()=>{
-  const names=[...Array(12)].map((_,i)=>'K'+String(i+1).padStart(2,'0')+'.jpg');
-  const out=[];
-  for(const n of names){const b=await (await fetch('/flow-keys/'+n,{cache:'no-store'})).arrayBuffer(); out.push({name:n,buf:b});}
-  (window.opener||parent).postMessage({stecKeys:out},'https://flow.google.com');
-  document.body.textContent='sent '+out.length;
-  setTimeout(()=>window.close(),1500);
-})();
-</script>
+<!doctype html><meta charset="utf-8"><meta name="robots" content="noindex"><title>Removed</title>
+<p style="font:14px sans-serif">This temporary helper has been switched off. Safe to delete this file.</p>

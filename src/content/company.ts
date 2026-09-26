@@ -33,6 +33,14 @@ export const NAV = [
 
 export const absolute = (path = "/") => new URL(path, company.url).toString();
 
+/** The share image (src/app/opengraph-image.jpg), named explicitly because a page's own openGraph block replaces the inherited one. */
+export const OG_IMAGE = {
+  url: "/opengraph-image.jpg",
+  width: 1200,
+  height: 630,
+  alt: "S TEC SECURE — Security that thinks. A modern villa at night secured with CCTV, access control and smart automation.",
+};
+
 /** Full Open Graph block for a page (child metadata replaces the parent's openGraph object). */
 export const og = (url: string, title: string, description: string) => ({
   type: "website" as const,
@@ -41,4 +49,5 @@ export const og = (url: string, title: string, description: string) => ({
   url,
   title,
   description,
+  images: [OG_IMAGE],
 });

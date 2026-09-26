@@ -251,8 +251,10 @@ html.lenis, html.lenis body { height: auto; }
   .hero-phone .brand-tag { margin-top: 10px; font-size: 24px; }
   .hero-phone .brand-word { margin-top: 12px; font-size: calc((100vw - 2 * var(--gutter)) / 6.9); }
   .hero-phone .brand-rule { margin: 14px 0 0; }
-  .hero-phone .pcue { position: absolute; right: var(--gutter); bottom: calc(24px + env(safe-area-inset-bottom, 0px)); display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase; color: rgba(255, 255, 255, 0.7); }
-  .hero-phone .pcue i { position: relative; display: block; width: 1px; height: 26px; overflow: hidden; background: rgba(255, 255, 255, 0.2); }
+  /* the scroll cue sits on the right edge above the wordmark, well clear of the film's corner mark */
+  .hero-phone .pcue { position: absolute; right: calc(var(--gutter) - 4px); bottom: calc(100% + 18px); display: flex; flex-direction: column; align-items: center; gap: 12px; font-family: var(--mono); font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase; color: rgba(255, 255, 255, 0.72); }
+  .hero-phone .pcue span { writing-mode: vertical-rl; }
+  .hero-phone .pcue i { position: relative; display: block; width: 1px; height: 34px; overflow: hidden; background: rgba(255, 255, 255, 0.2); }
   .hero-phone .pcue i::after { content: ""; position: absolute; inset: 0 0 auto 0; height: 50%; background: #fff; animation: scan 2.2s var(--ease-cine) infinite; }
 }
 @media (pointer: coarse) and (max-height: 500px) { .hero-phone { padding-bottom: 28px; } .hero-phone .brand-word { font-size: min(calc((100vw - 2 * var(--gutter)) / 6.9), 90px); } .hero-phone .pcue { display: none; } }
@@ -562,7 +564,7 @@ html.lenis, html.lenis body { height: auto; }
 
 /* how we work: one connected timeline — vertical on phones, a lit rail across on large screens */
 .flow { position: relative; margin-top: 40px; display: grid; }
-.flow-step { position: relative; display: grid; grid-template-columns: 44px 1fr; gap: 20px; padding-bottom: 36px; }
+.flow-step { position: relative; display: grid; grid-template-columns: 44px 1fr; align-content: start; gap: 20px; padding-bottom: 36px; }
 .flow-step:last-child { padding-bottom: 0; }
 /* a connector from each node to the next: a dim track with a lit line drawn over it in turn */
 .flow-step:not(:last-child)::before, .flow-step:not(:last-child)::after { content: ""; position: absolute; left: 21px; top: 22px; bottom: -22px; width: 1px; pointer-events: none; }
